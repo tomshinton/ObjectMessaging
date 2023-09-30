@@ -73,16 +73,27 @@ public:
 	};
 
 	template<typename TEvent>
-	void Bind(const TFunction<void(const TEvent&)>& InCallback)
+	FGuid Bind(const TFunction<void(const TEvent&)>& InCallback)
 	{
-		Bindings.Add(MakeShareable(new FBinding<TEvent>(InCallback)));
+		FGuid BindingID = FGuid::NewGuid();
+		Bindings.Add(BindingID, MakeShareable(new FBinding<TEvent>(InCallback)));
+		return BindingID;
+	}
+
+	void Unbind(FGuid InBindingID)
+	{
+		Bindings.Remove(InBindingID);
 	}
 
 	template<typename TEvent>
 	void InvokeNewEvent(const TEvent& InEvent)
 	{
-		for (TSharedPtr<FBindingBase> Binding : Bindings)
+		TArray<FGuid> BindingIDs;
+		Bindings.GenerateKeyArray(BindingIDs);
+
+		for (int32 Index = 0; Index < Bindings.Num(); ++Index)
 		{
+			TSharedPtr<FBindingBase> Binding = *Bindings.Find(BindingIDs[Index]);
 			if (Binding.IsValid())
 			{
 				if (Binding->ShouldExecute(*TEvent::StaticStruct()))
@@ -102,7 +113,7 @@ public:
 
 private:
 
-	TArray<TSharedPtr<FBindingBase>> Bindings;
+	TMap<FGuid, TSharedPtr<FBindingBase>> Bindings;
 };
 
 //-----------------------------------------------------------------------------------------------
