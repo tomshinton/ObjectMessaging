@@ -73,29 +73,40 @@ public:
 	};
 
 	template<typename TEvent>
-	void Bind(const TFunction<void(const TEvent&)>& InCallback)
+	TSharedPtr<FBindingBase> Bind(const TFunction<void(const TEvent&)>& InCallback)
 	{
-		Bindings.Add(MakeShareable(new FBinding<TEvent>(InCallback)));
+		TSharedPtr<FBindingBase> NewBinding = MakeShareable(new FBinding<TEvent>(InCallback));
+		Bindings.Add(NewBinding);
+		return NewBinding;
+	}
+
+	void Unbind(TSharedPtr<FBindingBase> InBinding)
+	{
+		Bindings.Remove(InBinding);
 	}
 
 	template<typename TEvent>
 	void InvokeNewEvent(const TEvent& InEvent)
 	{
-		for (TSharedPtr<FBindingBase> Binding : Bindings)
+		for (int32 Index = 0; Index < Bindings.Num(); ++Index)
 		{
-			if (Binding.IsValid())
+			if (Bindings.IsValidIndex(Index))
 			{
-				if (Binding->ShouldExecute(*TEvent::StaticStruct()))
+				TSharedPtr<FBindingBase> Binding = Bindings[Index];
+				if (Binding.IsValid())
 				{
-					if (const void* DataRaw = &InEvent)
+					if (Binding->ShouldExecute(*TEvent::StaticStruct()))
 					{
-						Binding->Execute(DataRaw);
+						if (const void* DataRaw = &InEvent)
+						{
+							Binding->Execute(DataRaw);
+						}
 					}
 				}
-			}
-			else
-			{
-				UE_LOG(ObjectMessagingListenerLog, Error, TEXT("Could not invoke function - binding is invalid!"));
+				else
+				{
+					UE_LOG(ObjectMessagingListenerLog, Error, TEXT("Could not invoke function - binding is invalid!"));
+				}
 			}
 		}
 	}
