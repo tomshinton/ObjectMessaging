@@ -32,13 +32,13 @@ namespace ObjectMessagingFunctions
 	}
 
 	template<typename TEvent>
-	static void BindMessage(const TWeakInterfacePtr<IObjectMessagingListenerInterface>& InInterface, const TFunction<void(const TEvent&)>& InCallback)
+	static FGuid BindMessage(const TWeakInterfacePtr<IObjectMessagingListenerInterface>& InInterface, const TFunction<void(const TEvent&)>& InCallback)
 	{
 		InInterface->GetListener().Bind<TEvent>(InCallback);
 	}
 
 	template<typename TEvent>
-	static void BindMessage(UObject& InRecievingObject, const TFunction<void(const TEvent&)>& InCallback)
+	static FGuid BindMessage(UObject& InRecievingObject, const TFunction<void(const TEvent&)>& InCallback)
 	{
 		if (IObjectMessagingListenerInterface* ObjectMessagingListenerInterface = Cast<IObjectMessagingListenerInterface>(&InRecievingObject))
 		{
