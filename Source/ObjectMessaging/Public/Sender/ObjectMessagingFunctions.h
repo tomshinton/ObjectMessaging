@@ -30,6 +30,25 @@ namespace ObjectMessagingFunctions
 			UE_LOG(ObjectMessagingFunctionsLog, Warning, TEXT("%s does not implement an Object Message Listener - cannot send message"), *InRecievingObject.GetName());
 		}
 	}
+
+	template<typename TEvent>
+	static void BindMessage(const TWeakInterfacePtr<IObjectMessagingListenerInterface>& InInterface, const TFunction<void(const TEvent&)>& InCallback)
+	{
+		InInterface->GetListener().Bind<TEvent>(InCallback);
+	}
+
+	template<typename TEvent>
+	static void BindMessage(UObject& InRecievingObject, const TFunction<void(const TEvent&)>& InCallback)
+	{
+		if (IObjectMessagingListenerInterface* ObjectMessagingListenerInterface = Cast<IObjectMessagingListenerInterface>(&InRecievingObject))
+		{
+			ObjectMessagingListenerInterface->GetListener().Bind<TEvent>(InCallback);
+		}
+		else
+		{
+			UE_LOG(ObjectMessagingFunctionsLog, Warning, TEXT("%s does not implement an Object Message Listener - cannot send message"), *InRecievingObject.GetName());
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------------------------
