@@ -34,7 +34,7 @@ namespace ObjectMessagingFunctions
 	template<typename TEvent>
 	static FGuid BindMessage(const TWeakInterfacePtr<IObjectMessagingListenerInterface>& InInterface, const TFunction<void(const TEvent&)>& InCallback)
 	{
-		InInterface->GetListener().Bind<TEvent>(InCallback);
+		return InInterface->GetListener().Bind<TEvent>(InCallback);
 	}
 
 	template<typename TEvent>
@@ -42,11 +42,30 @@ namespace ObjectMessagingFunctions
 	{
 		if (IObjectMessagingListenerInterface* ObjectMessagingListenerInterface = Cast<IObjectMessagingListenerInterface>(&InRecievingObject))
 		{
-			ObjectMessagingListenerInterface->GetListener().Bind<TEvent>(InCallback);
+			return ObjectMessagingListenerInterface->GetListener().Bind<TEvent>(InCallback);
 		}
 		else
 		{
-			UE_LOG(ObjectMessagingFunctionsLog, Warning, TEXT("%s does not implement an Object Message Listener - cannot send message"), *InRecievingObject.GetName());
+			UE_LOG(ObjectMessagingFunctionsLog, Warning, TEXT("%s does not implement an Object Message Listener - cannot bind message"), *InRecievingObject.GetName());
+		}
+		return FGuid();
+	}
+	static void UnbindMessage(const TWeakInterfacePtr<IObjectMessagingListenerInterface>& InInterface, FGuid& InBinding)
+	{
+		InInterface->GetListener().Unbind(InBinding);
+		InBinding.Invalidate();
+	}
+
+	static void UnbindMessage(UObject& InRecievingObject, FGuid& InBinding)
+	{
+		if (IObjectMessagingListenerInterface* ObjectMessagingListenerInterface = Cast<IObjectMessagingListenerInterface>(&InRecievingObject))
+		{
+			ObjectMessagingListenerInterface->GetListener().Unbind(InBinding);
+			InBinding.Invalidate();
+		}
+		else
+		{
+			UE_LOG(ObjectMessagingFunctionsLog, Warning, TEXT("%s does not implement an Object Message Listener - cannot unbind message"), *InRecievingObject.GetName());
 		}
 	}
 }
