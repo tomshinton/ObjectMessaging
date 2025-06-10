@@ -88,19 +88,15 @@ public:
 	template<typename TEvent>
 	void InvokeNewEvent(const TEvent& InEvent)
 	{
-		TArray<FGuid> BindingIDs;
-		Bindings.GenerateKeyArray(BindingIDs);
-
-		for (int32 Index = 0; Index < Bindings.Num(); ++Index)
+		for (const TPair<FGuid, TSharedPtr<FBindingBase>>& Binding : Bindings)
 		{
-			TSharedPtr<FBindingBase> Binding = *Bindings.Find(BindingIDs[Index]);
-			if (Binding.IsValid())
+			if (Binding.Value.IsValid())
 			{
-				if (Binding->ShouldExecute(*TEvent::StaticStruct()))
+				if (Binding.Value->ShouldExecute(*TEvent::StaticStruct()))
 				{
 					if (const void* DataRaw = &InEvent)
 					{
-						Binding->Execute(DataRaw);
+						Binding.Value->Execute(DataRaw);
 					}
 				}
 			}
